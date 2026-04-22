@@ -14,46 +14,45 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
 <div id="panorama"></div>
 <script src="pannellum.js"></script>
 <script>
-// 初始化全景（完全匹配3D溜溜初始角度）
 const viewer = pannellum.viewer('panorama', {
     type: 'equirectangular',
     panorama: 'a.jpg',
     autoLoad: true,
     showControls: true,
     yaw: 0,
-    pitch: -85,    // 3D溜溜原版：顶部俯视角度
-    hfov: 90,      // 3D溜溜原版视野
-    minPitch: -85,
+    pitch: -90,
+    hfov: 90,
+    minPitch: -90,
     maxPitch: 85,
-    autoRotate: 0  // 开场先关闭自动旋转
+    autoRotate: 0
 });
 
-// 3D溜溜原版：缓动下落动画（慢起慢停，最自然）
-setTimeout(() => {
-    const startPitch = -85;  // 起始俯视
-    const endPitch = 0;      // 结束平视
-    const duration = 2600;   // 3D溜溜原版动画时长2.6秒
+// 3D溜溜官方原版：加载完直接下落，无延迟、流畅缓动
+function startAnim() {
+    const start = -90;
+    const end = 0;
+    const duration = 2000;
     let startTime = null;
 
-    function runAnim(timestamp) {
+    function animate(timestamp) {
         if (!startTime) startTime = timestamp;
-        const timePassed = timestamp - startTime;
-        const progress = Math.min(timePassed / duration, 1);
-        // 3D溜溜同款缓动：先快后慢，自然收尾
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const currentPitch = startPitch + (endPitch - startPitch) * easeProgress;
-        
-        viewer.lookAt(0, currentPitch, 90);
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        // 3D溜溜原版缓动曲线
+        const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        viewer.lookAt(0, start + (end - start) * ease, 90);
         
         if (progress < 1) {
-            requestAnimationFrame(runAnim);
+            requestAnimationFrame(animate);
         } else {
-            // 动画结束后，开启3D溜溜原版自动旋转速度
-            viewer.setAutoRotate(0.6);
+            // 3D溜溜官方同款旋转速度
+            viewer.setAutoRotate(0.5);
         }
     }
-    requestAnimationFrame(runAnim);
-}, 500);
+    requestAnimationFrame(animate);
+}
+
+// 加载完成立即执行动画，无等待
+viewer.on('load', startAnim);
 </script>
 </body>
 </html>
