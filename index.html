@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- 手机防拉伸核心视口配置 -->
+    <!-- 手机核心适配：彻底防拉伸、防双击放大 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
-    <title>360全景漫游</title>
+    <title>我的360全景</title>
     <link rel="stylesheet" href="pannellum.css">
     <style>
-        * {margin: 0; padding: 0; box-sizing: border-box;}
+        * {margin:0; padding:0; box-sizing:border-box;}
         html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* 彻底禁止页面滚动拉扯 */
-            touch-action: none; /* 禁止手机双击、滑动回弹变形 */
+            width:100%; height:100%;
+            overflow:hidden; /* 禁止页面滚动 */
+            touch-action:none; /* 禁止手机误触变形 */
+            background:#000;
         }
         #panorama {
-            width: 100vw;
-            height: 100vh;
-            position: fixed; /* 永久锁定画面比例 */
-            top: 0;
-            left: 0;
+            width:100vw; height:100vh;
+            position:fixed; top:0; left:0;
         }
     </style>
 </head>
@@ -32,14 +29,25 @@
             type: 'equirectangular',
             panorama: 'a.jpg',
             autoLoad: true,
-            autoRotate: 0,
             showControls: true,
-            // 手机端专属防拉伸畸变参数
+
+            // ======================================
+            // 🔥 固定初始视角（你可以自己改数字！）
+            // ======================================
+            yaw: 0,      // 左右方向：-180~180（数字越大越往右）
+            pitch: 0,    // 上下方向：-90~90（正数抬头，负数低头）
+            hfov: 90,    // 视野大小（默认90最合适）
+
+            // ======================================
+            // 🔥 自动旋转（0=关闭，负数逆时针，正数顺时针）
+            // ======================================
+            autoRotate: 0,
+
+            // 手机横屏/竖屏 双端防变形
             preserveOrientation: true,
             dynamicSize: true,
-            // 限制视野范围，杜绝极端拉伸
-            minPitch: -90,
-            maxPitch: 90,
+            minPitch: -85,
+            maxPitch: 85,
             minHfov: 50,
             maxHfov: 120
         });
