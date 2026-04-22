@@ -1,26 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCS全景网站</title>
+    <meta charset="utf-8">
+    <title>360全景</title>
     <link rel="stylesheet" href="pannellum.css">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; }
-        #panorama { width: 100vw; height: 100vh; }
+        body{margin:0;padding:0}
+        #pano{width:100%;height:100vh;}
     </style>
 </head>
 <body>
-    <div id="panorama"></div>
+    <div id="pano"></div>
     <script src="pannellum.js"></script>
     <script>
-        pannellum.viewer('panorama', {
-            type: 'equirectangular',
-            panorama: 'my_pano.jpg',  // 这里改成你的全景图文件名
-            autoLoad: true,
-            autoRotate: -0,  // 自动旋转（-号是逆时针，数值越大越快）
-            showControls: true  // 显示控制按钮
-        });
+    pannellum.viewer('pano', {
+        type: 'equirectangular',
+        panorama: 'a.jpg',  // 已改成你的图片名
+        autoLoad: true,
+        autoRotate: 0
+    });
     </script>
 </body>
 </html>
