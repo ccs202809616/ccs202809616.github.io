@@ -1,60 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全景展示</title>
+
+<link rel="stylesheet" href="pannellum.css">
+
+<style>
+html,body{margin:0;height:100%;background:#000;}
+#panorama{width:100%;height:100%;}
+
+/* 顶部LOGO */
+.logo{
+    position:absolute;
+    top:15px;
+    left:15px;
+    color:#fff;
+    z-index:999;
+}
+
+/* 缩略图栏（核心） */
+.thumb-bar{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    height:90px;
+    background:rgba(0,0,0,0.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+}
+
+.thumb{
+    width:120px;
+    height:70px;
+    background-size:cover;
+    cursor:pointer;
+    border:2px solid transparent;
+}
+
+.thumb.active{
+    border:2px solid #00d4ff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="logo">我的全景</div>
+<div id="panorama"></div>
+
+<!-- 缩略图 -->
+<div class="thumb-bar">
+    <div class="thumb active" style="background-image:url(images/thumb1.jpg)" onclick="loadScene('scene1')"></div>
+    <div class="thumb" style="background-image:url(images/thumb2.jpg)" onclick="loadScene('scene2')"></div>
+    <div class="thumb" style="background-image:url(images/thumb3.jpg)" onclick="loadScene('scene3')"></div>
+</div>
+
+<script src="pannellum.js"></script>
+
 <script>
+
 const viewer = pannellum.viewer('panorama', {
-    type: 'equirectangular',
-    panorama: 'a.jpg',
-    autoLoad: true,
 
-    showControls: true,
+    default: {
+        firstScene: 'scene1',
+        sceneFadeDuration: 1000
+    },
 
-    yaw: 0,
-    pitch: -90,   // 从顶部开始
-    hfov: 110,
+    scenes: {
 
-    minPitch: -90,
-    maxPitch: 85,
+        scene1: {
+            panorama: 'images/scene1.jpg',
+            pitch: -90,
+            yaw: 0,
+            hfov: 110,
 
-    minHfov: 50,
-    maxHfov: 120,
+            hotSpots: [
+                {
+                    pitch: 5,
+                    yaw: 100,
+                    type: "scene",
+                    text: "进入下一个空间",
+                    sceneId: "scene2"
+                }
+            ]
+        },
 
-    autoRotate: 0,
+        scene2: {
+            panorama: 'images/scene2.jpg',
 
-    friction: 0.15, // 更顺滑拖动
+            hotSpots: [
+                {
+                    pitch: 0,
+                    yaw: -90,
+                    type: "scene",
+                    text: "返回",
+                    sceneId: "scene1"
+                },
+                {
+                    pitch: 10,
+                    yaw: 90,
+                    type: "scene",
+                    text: "继续前进",
+                    sceneId: "scene3"
+                }
+            ]
+        },
+
+        scene3: {
+            panorama: 'images/scene3.jpg',
+
+            hotSpots: [
+                {
+                    pitch: 0,
+                    yaw: 180,
+                    type: "scene",
+                    text: "返回",
+                    sceneId: "scene2"
+                }
+            ]
+        }
+    }
 });
 
 
+/* ⭐ 溜溜同款开场动画 */
 viewer.on('load', function () {
 
-    const startPitch = -90;   // 顶部俯视
-    const endPitch = 0;       // 平视
-    const startHfov = 120;    // 远景
-    const endHfov = 90;       // 正常视角
+    let start = null;
+    const duration = 2800;
 
-    const duration = 2800;    // 动画时间（溜溜偏慢）
-    let startTime = null;
+    function animate(t){
+        if(!start) start = t;
 
-    function animate(timestamp) {
+        let p = (t - start)/duration;
+        if(p > 1) p = 1;
 
-        if (!startTime) startTime = timestamp;
+        let ease = 1 - Math.pow(1-p,4);
 
-        let progress = (timestamp - startTime) / duration;
-        if (progress > 1) progress = 1;
+        let pitch = -90 + 90 * ease;
+        let hfov  = 120 - 30 * ease;
 
-        /* ⭐ 核心：电影级缓动（比你之前更顺） */
-        let ease = 1 - Math.pow(1 - progress, 4);
+        viewer.lookAt(pitch, 0, hfov);
 
-        let currentPitch = startPitch + (endPitch - startPitch) * ease;
-        let currentHfov  = startHfov  + (endHfov  - startHfov)  * ease;
-
-        viewer.lookAt(currentPitch, 0, currentHfov);
-
-        if (progress < 1) {
+        if(p < 1){
             requestAnimationFrame(animate);
-        } else {
-
-            /* ⭐ 缓慢自动旋转（关键点） */
+        }else{
             setTimeout(()=>{
-                viewer.setAutoRotate(0.25); // 很慢，很像溜溜
-            }, 500);
+                viewer.setAutoRotate(0.25);
+            },500);
         }
     }
 
@@ -62,10 +159,24 @@ viewer.on('load', function () {
 });
 
 
-/* ⭐ 用户一操作就停止旋转（溜溜同款逻辑） */
-const el = document.getElementById('panorama');
+/* 场景切换（缩略图） */
+function loadScene(id){
+    viewer.loadScene(id);
 
-el.addEventListener('mousedown', ()=> viewer.stopAutoRotate());
-el.addEventListener('touchstart', ()=> viewer.stopAutoRotate());
+    document.querySelectorAll('.thumb').forEach(el=>el.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+
+/* 用户操作停止旋转 */
+document.getElementById('panorama').addEventListener('mousedown',()=>{
+    viewer.stopAutoRotate();
+});
+document.getElementById('panorama').addEventListener('touchstart',()=>{
+    viewer.stopAutoRotate();
+});
 
 </script>
+
+</body>
+</html>
