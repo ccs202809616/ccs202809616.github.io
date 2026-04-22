@@ -1,56 +1,157 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- 手机核心适配：彻底防拉伸、防双击放大 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
-    <title>我的360全景</title>
-    <link rel="stylesheet" href="pannellum.css">
-    <style>
-        * {margin:0; padding:0; box-sizing:border-box;}
-        html, body {
-            width:100%; height:100%;
-            overflow:hidden; /* 禁止页面滚动 */
-            touch-action:none; /* 禁止手机误触变形 */
-            background:#000;
-        }
-        #panorama {
-            width:100vw; height:100vh;
-            position:fixed; top:0; left:0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>360全景</title>
+
+<link rel="stylesheet" href="pannellum.css">
+
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#000;
+}
+
+/* 全景容器 */
+#panorama{
+    width:100%;
+    height:100%;
+}
+
+/* LOGO */
+.logo{
+    position:absolute;
+    top:15px;
+    left:15px;
+    color:#fff;
+    font-size:14px;
+    background:rgba(0,0,0,0.5);
+    padding:6px 10px;
+    border-radius:6px;
+    z-index:999;
+}
+
+/* 底部提示 */
+.tip{
+    position:absolute;
+    bottom:20px;
+    width:100%;
+    text-align:center;
+    color:#fff;
+    font-size:12px;
+    opacity:0.6;
+}
+
+/* 加载动画 */
+.loading{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:#fff;
+    font-size:14px;
+}
+</style>
+
 </head>
+
 <body>
-    <div id="panorama"></div>
 
-    <script src="pannellum.js"></script>
-    <script>
-        pannellum.viewer('panorama', {
-            type: 'equirectangular',
-            panorama: 'a.jpg',
-            autoLoad: true,
-            showControls: true,
+<div class="logo">我的全景</div>
+<div class="loading" id="loading">加载中...</div>
 
-            // ======================================
-            // 🔥 固定初始视角（你可以自己改数字！）
-            // ======================================
-            yaw: 0,      // 左右方向：-180~180（数字越大越往右）
-            pitch: 0,    // 上下方向：-90~90（正数抬头，负数低头）
-            hfov: 90,    // 视野大小（默认90最合适）
+<div id="panorama"></div>
 
-            // ======================================
-            // 🔥 自动旋转（0=关闭，负数逆时针，正数顺时针）
-            // ======================================
-            autoRotate: 0,
+<div class="tip">拖动查看 · 双指缩放</div>
 
-            // 手机横屏/竖屏 双端防变形
-            preserveOrientation: true,
-            dynamicSize: true,
-            minPitch: -85,
-            maxPitch: 85,
-            minHfov: 50,
-            maxHfov: 120
-        });
-    </script>
+<script src="pannellum.js"></script>
+
+<script>
+
+const viewer = pannellum.viewer('panorama', {
+
+    type: 'equirectangular',
+    panorama: 'a.jpg',
+
+    autoLoad: true,
+
+    /* 控件 */
+    showControls: true,
+
+    /* 视角 */
+    yaw: 0,
+    pitch: 0,
+    hfov: 100,
+
+    minHfov: 50,
+    maxHfov: 120,
+
+    minPitch: -85,
+    maxPitch: 85,
+
+    /* 惯性（接近溜溜网） */
+    friction: 0.15,
+
+    /* 自动旋转 */
+    autoRotate: 0,
+    autoRotateInactivityDelay: 3000,
+
+    /* 鼠标灵敏度 */
+    mouseZoom: true,
+    draggable: true,
+
+    /* 加载优化 */
+    loadFullResolution: true
+});
+
+
+/* 入场动画（更丝滑） */
+viewer.on('load', function () {
+
+    document.getElementById('loading').style.display = 'none';
+
+    let start = null;
+    const duration = 2500;
+
+    function animate(time){
+        if(!start) start = time;
+
+        let progress = (time - start) / duration;
+        if(progress > 1) progress = 1;
+
+        /* 缓动（更高级） */
+        let ease = 1 - Math.pow(1 - progress, 4);
+
+        let pitch = -30 + 30 * ease;
+        let hfov = 120 - 30 * ease;
+
+        viewer.lookAt(pitch, 0, hfov);
+
+        if(progress < 1){
+            requestAnimationFrame(animate);
+        }else{
+            viewer.setAutoRotate(0.3);
+        }
+    }
+
+    requestAnimationFrame(animate);
+});
+
+
+/* 点击暂停旋转（像溜溜） */
+document.getElementById('panorama').addEventListener('mousedown',()=>{
+    viewer.stopAutoRotate();
+});
+document.getElementById('panorama').addEventListener('touchstart',()=>{
+    viewer.stopAutoRotate();
+});
+
+</script>
+
 </body>
 </html>
