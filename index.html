@@ -7,16 +7,8 @@
     <link rel="stylesheet" href="pannellum.css">
     <style>
         * {margin:0; padding:0; box-sizing:border-box;}
-        html, body {
-            width:100%; height:100%;
-            overflow:hidden;
-            touch-action:none;
-            background:#000;
-        }
-        #panorama {
-            width:100vw; height:100vh;
-            position:fixed; top:0; left:0;
-        }
+        html, body {width:100%; height:100%; overflow:hidden; touch-action:none; background:#000;}
+        #panorama {width:100vw; height:100vh; position:fixed; top:0; left:0;}
     </style>
 </head>
 <body>
@@ -30,19 +22,25 @@
             autoLoad: true,
             showControls: true,
 
-            // 初始视角：完全俯视顶部
+            // 初始视角：正上方俯视
             yaw: 0,
             pitch: -90,
             hfov: 100,
 
-            // 开场动画：从顶部慢慢落下来（模仿3D溜溜效果）
+            // 开场动画：从顶部缓慢落下
             startAnim: {
-                pitch: 10,     // 最终停在平视略微低头
-                hfov: 90,      // 视野慢慢收缩
-                speed: 20      // 动画速度（数字越小越慢）
+                pitch: 10,
+                hfov: 90,
+                speed: 20
             },
 
-            autoRotate: 0,
+            // ======================================
+            // 🔥 3D溜溜网同款自动旋转（核心参数）
+            // ======================================
+            autoRotate: 2, // 顺时针2度/秒（推荐），-2=逆时针
+            autoRotateInactivityDelay: 2000, // 无操作2秒后自动旋转（模仿3D溜溜）
+
+            // 手机端防变形
             preserveOrientation: true,
             dynamicSize: true,
             minPitch: -85,
