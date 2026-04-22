@@ -14,37 +14,45 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
 <div id="panorama"></div>
 <script src="pannellum.js"></script>
 <script>
+// 初始化全景（完全匹配3D溜溜初始角度）
 const viewer = pannellum.viewer('panorama', {
     type: 'equirectangular',
     panorama: 'a.jpg',
     autoLoad: true,
     showControls: true,
     yaw: 0,
-    pitch: -85,
-    hfov: 90,
+    pitch: -85,    // 3D溜溜原版：顶部俯视角度
+    hfov: 90,      // 3D溜溜原版视野
     minPitch: -85,
     maxPitch: 85,
-    autoRotate: 0
+    autoRotate: 0  // 开场先关闭自动旋转
 });
 
-// 3D溜溜同款：平滑从顶部落下 + 缓动动画
+// 3D溜溜原版：缓动下落动画（慢起慢停，最自然）
 setTimeout(() => {
-    let start = -85;
-    let end = 0;
-    let duration = 2500;
+    const startPitch = -85;  // 起始俯视
+    const endPitch = 0;      // 结束平视
+    const duration = 2600;   // 3D溜溜原版动画时长2.6秒
     let startTime = null;
 
-    function animate(timestamp) {
+    function runAnim(timestamp) {
         if (!startTime) startTime = timestamp;
-        const progress = timestamp - startTime;
-        const percent = Math.min(progress / duration, 1);
-        const ease = percent === 1 ? 1 : 1 - Math.pow(2, -10 * percent);
-        const currentPitch = start + (end - start) * ease;
+        const timePassed = timestamp - startTime;
+        const progress = Math.min(timePassed / duration, 1);
+        // 3D溜溜同款缓动：先快后慢，自然收尾
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentPitch = startPitch + (endPitch - startPitch) * easeProgress;
+        
         viewer.lookAt(0, currentPitch, 90);
-        if (percent < 1) requestAnimationFrame(animate);
-        else viewer.setAutoRotate(0.8);
+        
+        if (progress < 1) {
+            requestAnimationFrame(runAnim);
+        } else {
+            // 动画结束后，开启3D溜溜原版自动旋转速度
+            viewer.setAutoRotate(0.6);
+        }
     }
-    requestAnimationFrame(animate);
+    requestAnimationFrame(runAnim);
 }, 500);
 </script>
 </body>
